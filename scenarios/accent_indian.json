@@ -1,0 +1,18 @@
+{
+  "id": "accent_indian",
+  "title": "Platform time read in Indian English",
+  "tags": ["accent"],
+  "noise_kind": "room",
+  "snr_db": 24,
+  "seed": 4,
+  "utterances": [
+    {
+      "speaker": "B",
+      "accent": "indian_english",
+      "start": 0.3,
+      "end": 4.2,
+      "energy": 0.8,
+      "text": "The train leaves at three thirty on Wednesday"
+    }
+  ]
+}

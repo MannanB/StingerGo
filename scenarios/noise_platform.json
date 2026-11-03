@@ -1,0 +1,26 @@
+{
+  "id": "noise_platform",
+  "title": "Announcement under train noise",
+  "tags": ["noise"],
+  "noise_kind": "platform",
+  "snr_db": 5,
+  "seed": 11,
+  "utterances": [
+    {
+      "speaker": "A",
+      "accent": "general_american",
+      "start": 0.2,
+      "end": 3.6,
+      "energy": 0.8,
+      "text": "The next train is for the airport"
+    },
+    {
+      "speaker": "A",
+      "accent": "general_american",
+      "start": 3.9,
+      "end": 6.2,
+      "energy": 0.36,
+      "text": "Please stand behind the line"
+    }
+  ]
+}

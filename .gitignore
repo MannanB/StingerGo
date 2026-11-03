@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+runs/
+patches/
+tests/regressions/
+graption/data/
+audio_cache/
+.env

@@ -1,0 +1,26 @@
+{
+  "id": "overlap_cafe",
+  "title": "Two voices at a cafe counter",
+  "tags": ["overlap"],
+  "noise_kind": "cafe",
+  "snr_db": 16,
+  "seed": 7,
+  "utterances": [
+    {
+      "speaker": "A",
+      "accent": "general_american",
+      "start": 0.0,
+      "end": 3.2,
+      "energy": 0.78,
+      "text": "Can you hear the train from here"
+    },
+    {
+      "speaker": "B",
+      "accent": "general_american",
+      "start": 1.8,
+      "end": 4.6,
+      "energy": 0.55,
+      "text": "I can hear it over the cups"
+    }
+  ]
+}

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CaptionFix — failures you can hear</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #12110e;
+      --panel: #1c1a16;
+      --line: #3a342c;
+      --text: #f4f0e6;
+      --muted: #b3aa9c;
+      --amber: #f0b429;
+      --pass: #c6e27a;
+      --fail: #ff6a45;
+      --focus: #ffe08a;
+      --a: #f0b429;
+      --b: #7eb6ff;
+      --c: #c6e27a;
+      --other: #c9a4ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 17px/1.45 "Iowan Old Style", Palatino, Georgia, serif;
+    }
+    header, main { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 28px 0 16px; border-bottom: 1px solid var(--line); }
+    .eyebrow {
+      font: 12px/1 ui-monospace, "SF Mono", Menlo, monospace;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin: 0 0 8px;
+    }
+    h1 { font-size: 40px; font-weight: 500; margin: 0; letter-spacing: -0.03em; }
+    header p { max-width: 40rem; color: var(--muted); margin: 8px 0 0; }
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin: 18px 0;
+    }
+    .score { font: 64px/0.9 ui-monospace, Menlo, monospace; letter-spacing: -0.04em; }
+    .score span { color: var(--muted); font-size: 28px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    button, .play {
+      font: 14px/1 ui-monospace, Menlo, monospace;
+      background: var(--text);
+      color: var(--bg);
+      border: 0;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+    button.secondary, .play.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    button:focus-visible, .play:focus-visible, audio:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+    button:disabled { opacity: 0.5; cursor: wait; }
+    #status { font: 14px/1.4 ui-monospace, Menlo, monospace; color: var(--muted); }
+    .board { display: grid; gap: 8px; margin: 8px 0 28px; }
+    .row {
+      display: grid;
+      grid-template-columns: 168px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+      color: inherit;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+    }
+    .row .name { font: 14px/1.2 ui-monospace, Menlo, monospace; }
+    .meters { display: grid; gap: 4px; }
+    .meter { display: grid; grid-template-columns: 64px 1fr 42px; gap: 8px; align-items: center; }
+    .meter span, .meter b { font: 11px/1 ui-monospace, Menlo, monospace; color: var(--muted); font-weight: 400; }
+    .track { position: relative; height: 8px; background: #2a261f; }
+    .fill { position: absolute; inset: 0 auto 0 0; height: 8px; }
+    .fill.bad { background: var(--fail); }
+    .fill.ok { background: var(--pass); }
+    .gate {
+      position: absolute;
+      top: -2px;
+      width: 2px;
+      height: 12px;
+      background: var(--text);
+    }
+    .verdict { font: 13px/1 ui-monospace, Menlo, monospace; }
+    .pass { color: var(--pass); }
+    .fail { color: var(--fail); }
+    .card {
+      background: var(--panel);
+      padding: 16px;
+      margin: 0 0 14px;
+      scroll-margin-top: 12px;
+    }
+    .card header { width: auto; border: 0; padding: 0; display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+    .card h2 { font-size: 26px; font-weight: 500; margin: 0; }
+    .why { color: var(--muted); margin: 6px 0 12px; }
+    audio { width: 100%; margin: 8px 0 12px; }
+    canvas { width: 100%; height: 72px; display: block; background: #14120f; }
+    .lanes { margin-top: 12px; display: grid; gap: 8px; }
+    .lane { display: grid; grid-template-columns: 72px 1fr; gap: 8px; align-items: center; }
+    .lane b { font: 11px/1.2 ui-monospace, Menlo, monospace; color: var(--muted); font-weight: 400; }
+    .lane-track { position: relative; height: 28px; background: #14120f; }
+    .cue {
+      position: absolute;
+      top: 4px;
+      height: 20px;
+      overflow: hidden;
+      color: #1a140c;
+      font: 11px/20px ui-monospace, Menlo, monospace;
+      padding: 0 4px;
+      white-space: nowrap;
+    }
+    .spk-A { background: var(--a); }
+    .spk-B { background: var(--b); }
+    .spk-C { background: var(--c); }
+    .spk-other { background: var(--other); }
+    .said { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .said p { margin: 0; }
+    .said h3 { font: 12px/1 ui-monospace, Menlo, monospace; letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber); margin: 0 0 6px; }
+    #now { min-height: 1.3em; font: 14px/1.4 ui-monospace, Menlo, monospace; color: var(--amber); }
+    @media (max-width: 720px) {
+      h1 { font-size: 32px; }
+      .score { font-size: 48px; }
+      .row, .said, .lane { grid-template-columns: 1fr; }
+      .card header { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Grok Bot · grok-voice-transcribe-2.0</p>
+    <h1>Hear the captions that fail</h1>
+    <p>Each clip is the mix Grok spoke, then transcribed. Failures are the clips whose captions miss the script.</p>
+  </header>
+  <main>
+    <section class="summary" aria-label="Suite result">
+      <div>
+        <p class="eyebrow" id="run-label">Latest run</p>
+        <p class="score" id="score">—<span> / —</span></p>
+      </div>
+      <div class="controls">
+        <button id="hear" type="button">Hear every failure</button>
+        <button id="stop" class="secondary" type="button">Stop</button>
+        <span id="status" role="status"></span>
+      </div>
+    </section>
+    <p id="now" aria-live="polite"></p>
+    <section aria-label="Scoreboard">
+      <h2 class="eyebrow">Scoreboard</h2>
+      <div class="board" id="board"></div>
+    </section>
+    <section aria-label="Failed clips">
+      <h2 class="eyebrow">Failed clips</h2>
+      <div id="fails"></div>
+    </section>
+  </main>
+  <script>
+    const GATES = {
+      wer: { label: "WER", max: 0.08, higher: false },
+      overlap_recall: { label: "Overlap", min: 0.95, higher: true },
+      accent_error_rate: { label: "Accent", max: 0.05, higher: false },
+      hallucination_rate: { label: "Halluc", max: 0.02, higher: false },
+    };
+
+    let state = null;
+    let playlist = [];
+    let playing = false;
+
+    function num(value) {
+      return Number(value).toFixed(2);
+    }
+
+    function failed(result) {
+      return result && !result.passed;
+    }
+
+    function gateBroken(key, value) {
+      const gate = GATES[key];
+      return gate.higher ? value < gate.min : value > gate.max;
+    }
+
+    function parseStamp(stamp) {
+      const [hours, minutes, seconds] = stamp.trim().split(":");
+      return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
+    }
+
+    function parseVtt(text) {
+      if (!text) return [];
+      return text.split(/\n\n+/).flatMap((block) => {
+        const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+        const timing = lines.find((line) => line.includes("-->"));
+        if (!timing) return [];
+        const [start, end] = timing.split("-->");
+        const body = lines.slice(lines.indexOf(timing) + 1).join(" ");
+        const marked = body.match(/^<([^>]+)>\s*(.*)$/);
+        return [{
+          start: parseStamp(start),
+          end: parseStamp(end),
+          speaker: marked ? marked[1] : "?",
+          text: marked ? marked[2] : body,
+        }];
+      });
+    }
+
+    function speakerClass(speaker) {
+      return ["A", "B", "C"].includes(speaker) ? `spk-${speaker}` : "spk-other";
+    }
+
+    function meter(key, value) {
+      const gate = GATES[key];
+      const broken = gateBroken(key, value);
+      const mark = gate.higher ? gate.min : gate.max;
+      const scale = Math.max(1, value, mark);
+      return `
+        <div class="meter">
+          <span>${gate.label}</span>
+          <div class="track" role="img" aria-label="${gate.label} ${num(value)}, gate ${num(mark)}">
+            <i class="fill ${broken ? "bad" : "ok"}" style="width:${(value / scale) * 100}%"></i>
+            <i class="gate" style="left:${(mark / scale) * 100}%"></i>
+          </div>
+          <b>${num(value)}</b>
+        </div>`;
+    }
+
+    function lane(label, cues, duration) {
+      const bars = cues.map((cue) => {
+        const left = (cue.start / duration) * 100;
+        const width = Math.max(1.2, ((cue.end - cue.start) / duration) * 100);
+        return `<i class="cue ${speakerClass(cue.speaker)}" style="left:${left}%;width:${width}%" title="${cue.speaker}: ${cue.text}">${cue.speaker} ${cue.text}</i>`;
+      }).join("");
+      return `<div class="lane"><b>${label}</b><div class="lane-track">${bars}</div></div>`;
+    }
+
+    function render() {
+      const report = state.report;
+      const results = (report && report.results) || [];
+      const byId = Object.fromEntries(results.map((item) => [item.scenario_id, item]));
+      const passed = report ? report.passed : 0;
+      const total = report ? report.total : state.scenarios.length;
+      document.querySelector("#score").innerHTML = `${passed}<span> / ${total} passed</span>`;
+      document.querySelector("#run-label").textContent = report ? `Run ${report.run_id}` : "No run yet";
+      document.querySelector("#status").textContent = report
+        ? `${report.failed} clip${report.failed === 1 ? "" : "s"} to hear`
+        : "Run the suite from Grok Bot first.";
+
+      const board = document.querySelector("#board");
+      board.innerHTML = "";
+      const fails = document.querySelector("#fails");
+      fails.innerHTML = "";
+      playlist = [];
+
+      const ordered = [...state.scenarios].sort((left, right) => {
+        const leftFail = failed(byId[left.id]) ? 0 : 1;
+        const rightFail = failed(byId[right.id]) ? 0 : 1;
+        return leftFail - rightFail;
+      });
+
+      for (const scenario of ordered) {
+        const result = byId[scenario.id];
+        const verdict = result ? (result.passed ? "pass" : "fail") : "—";
+        const row = document.createElement("button");
+        row.type = "button";
+        row.className = "row";
+        row.innerHTML = `
+          <span class="name">${scenario.id}</span>
+          <span class="meters">
+            ${result ? ["wer", "overlap_recall", "accent_error_rate", "hallucination_rate"].map((key) => meter(key, result[key])).join("") : ""}
+          </span>
+          <span class="verdict ${verdict}">${verdict}</span>`;
+        row.addEventListener("click", () => {
+          const card = document.getElementById(`clip-${scenario.id}`);
+          if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        board.appendChild(row);
+        if (!failed(result)) continue;
+        playlist.push(scenario.id);
+        fails.appendChild(cardFor(scenario, result));
+      }
+      if (!playlist.length) {
+        fails.innerHTML = "<p class='why'>Nothing failed in the latest run.</p>";
+      }
+    }
+
+    function cardFor(scenario, result) {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.id = `clip-${scenario.id}`;
+      const reference = parseVtt(result.reference_vtt);
+      const hypothesis = parseVtt(result.hypothesis_vtt);
+      const duration = Math.max(1, ...reference.map((cue) => cue.end), ...hypothesis.map((cue) => cue.end));
+      const notes = (result.notes || []).join(" ");
+      card.innerHTML = `
+        <header>
+          <h2>${scenario.title}</h2>
+          <button class="play" type="button" data-play="${scenario.id}">Play</button>
+        </header>
+        <p class="why">${scenario.id} · ${scenario.tags.join(", ")} · ${notes}</p>
+        <canvas id="wave-${scenario.id}" width="960" height="72" aria-label="Waveform of ${scenario.title}"></canvas>
+        <audio id="audio-${scenario.id}" controls preload="none" src="/audio/${scenario.id}.wav">
+          <a href="/audio/${scenario.id}.wav">Download ${scenario.id}</a>
+        </audio>
+        <div class="lanes">
+          ${lane("Script", reference, duration)}
+          ${lane("Heard", hypothesis, duration)}
+        </div>
+        <div class="said">
+          <div><h3>Script</h3><p>${scenario.utterances.map((item) => `${esc(item.speaker)}: ${esc(item.text)}`).join("<br>")}</p></div>
+          <div><h3>Heard</h3><p>${hypothesis.map((cue) => `${esc(cue.speaker)}: ${esc(cue.text)}`).join("<br>") || "Nothing captioned."}</p></div>
+        </div>`;
+      card.querySelector("[data-play]").addEventListener("click", () => playOne(scenario.id));
+      drawWave(card.querySelector("canvas"), scenario.id);
+      return card;
+    }
+
+    function esc(value) {
+      return String(value).replace(/[&<>]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[char]));
+    }
+
+    function wavSamples(buffer) {
+      const view = new DataView(buffer);
+      let offset = 12;
+      let dataOffset = 0;
+      let dataLength = 0;
+      while (offset + 8 <= view.byteLength) {
+        const id = String.fromCharCode(view.getUint8(offset), view.getUint8(offset + 1), view.getUint8(offset + 2), view.getUint8(offset + 3));
+        const size = view.getUint32(offset + 4, true);
+        if (id === "data") {
+          dataOffset = offset + 8;
+          dataLength = size;
+          break;
+        }
+        offset += 8 + size;
+      }
+      const count = Math.floor(dataLength / 2);
+      const samples = new Float32Array(count);
+      for (let index = 0; index < count; index += 1) {
+        samples[index] = view.getInt16(dataOffset + index * 2, true) / 32768;
+      }
+      return samples;
+    }
+
+    async function drawWave(canvas, id) {
+      if (!canvas) return;
+      const response = await fetch(`/audio/${id}.wav`);
+      if (!response.ok) return;
+      const samples = wavSamples(await response.arrayBuffer());
+      const paint = canvas.getContext("2d");
+      const width = canvas.width;
+      const height = canvas.height;
+      paint.clearRect(0, 0, width, height);
+      paint.fillStyle = "#f0b429";
+      const step = Math.max(1, Math.floor(samples.length / width));
+      for (let x = 0; x < width; x += 1) {
+        let peak = 0;
+        const start = x * step;
+        for (let index = 0; index < step; index += 1) peak = Math.max(peak, Math.abs(samples[start + index] || 0));
+        const bar = Math.max(1, peak * height);
+        paint.fillRect(x, (height - bar) / 2, 1, bar);
+      }
+    }
+
+    function stopAll() {
+      playing = false;
+      document.querySelectorAll("audio").forEach((audio) => {
+        audio.pause();
+        audio.currentTime = 0;
+      });
+      document.querySelector("#now").textContent = "";
+    }
+
+    function playOne(id) {
+      stopAll();
+      const audio = document.getElementById(`audio-${id}`);
+      const title = state.scenarios.find((item) => item.id === id);
+      document.querySelector("#now").textContent = `Hearing ${title ? title.title : id}`;
+      audio.play();
+      audio.onended = () => {
+        document.querySelector("#now").textContent = "";
+      };
+    }
+
+    async function hearAll() {
+      stopAll();
+      playing = true;
+      for (const id of playlist) {
+        if (!playing) return;
+        const card = document.getElementById(`clip-${id}`);
+        const audio = document.getElementById(`audio-${id}`);
+        const title = state.scenarios.find((item) => item.id === id);
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.querySelector("#now").textContent = `Hearing ${title ? title.title : id}`;
+        await new Promise((resolve) => {
+          audio.onended = resolve;
+          audio.play().catch(resolve);
+        });
+      }
+      playing = false;
+      document.querySelector("#now").textContent = "Finished the failed clips.";
+    }
+
+    document.querySelector("#hear").addEventListener("click", () => {
+      hearAll().catch((error) => {
+        document.querySelector("#status").textContent = error.message;
+      });
+    });
+    document.querySelector("#stop").addEventListener("click", stopAll);
+
+    fetch("/api/state")
+      .then((response) => response.json())
+      .then((payload) => {
+        state = payload;
+        render();
+      })
+      .catch((error) => {
+        document.querySelector("#status").textContent = error.message;
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "id": "overlap_panel",
+  "title": "Three voices on a panel",
+  "tags": ["overlap"],
+  "noise_kind": "room",
+  "snr_db": 18,
+  "seed": 9,
+  "utterances": [
+    {
+      "speaker": "A",
+      "accent": "general_american",
+      "start": 0.0,
+      "end": 4.0,
+      "energy": 0.8,
+      "text": "We should ship the caption fix today"
+    },
+    {
+      "speaker": "B",
+      "accent": "general_american",
+      "start": 2.0,
+      "end": 5.0,
+      "energy": 0.6,
+      "text": "The overlap case is still open"
+    },
+    {
+      "speaker": "C",
+      "accent": "general_american",
+      "start": 3.5,
+      "end": 6.5,
+      "energy": 0.7,
+      "text": "I can take the accent suite"
+    }
+  ]
+}

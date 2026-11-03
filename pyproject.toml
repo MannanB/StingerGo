@@ -1,0 +1,15 @@
+[project]
+name = "captionfix"
+version = "0.1.0"
+description = "Self-improving accessibility lab for caption failures"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[project.scripts]
+captionfix = "captionfix.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["captionfix*"]
+
+[tool.setuptools.package-data]
+captionfix = ["api/index.html"]

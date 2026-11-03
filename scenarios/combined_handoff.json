@@ -1,0 +1,26 @@
+{
+  "id": "combined_handoff",
+  "title": "Handoff with overlap, accent, and cafe noise",
+  "tags": ["overlap", "accent", "noise"],
+  "noise_kind": "cafe",
+  "snr_db": 6,
+  "seed": 21,
+  "utterances": [
+    {
+      "speaker": "A",
+      "accent": "general_american",
+      "start": 0.0,
+      "end": 3.0,
+      "energy": 0.82,
+      "text": "Tell me when the train leaves"
+    },
+    {
+      "speaker": "B",
+      "accent": "indian_english",
+      "start": 2.0,
+      "end": 5.2,
+      "energy": 0.5,
+      "text": "It leaves at three thirty on Wednesday"
+    }
+  ]
+}

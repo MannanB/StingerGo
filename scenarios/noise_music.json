@@ -1,0 +1,26 @@
+{
+  "id": "noise_music",
+  "title": "Voiceover on a music bed",
+  "tags": ["noise"],
+  "noise_kind": "music",
+  "snr_db": 4,
+  "seed": 12,
+  "utterances": [
+    {
+      "speaker": "A",
+      "accent": "general_american",
+      "start": 0.4,
+      "end": 3.2,
+      "energy": 0.8,
+      "text": "Stay with the melody until the chorus"
+    },
+    {
+      "speaker": "A",
+      "accent": "general_american",
+      "start": 3.4,
+      "end": 5.6,
+      "energy": 0.34,
+      "text": "Then bring the vocal forward"
+    }
+  ]
+}

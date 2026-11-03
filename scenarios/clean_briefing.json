@@ -1,0 +1,18 @@
+{
+  "id": "clean_briefing",
+  "title": "Quiet booth, one speaker",
+  "tags": ["clean"],
+  "noise_kind": "room",
+  "snr_db": 28,
+  "seed": 1,
+  "utterances": [
+    {
+      "speaker": "A",
+      "accent": "general_american",
+      "start": 0.2,
+      "end": 3.4,
+      "energy": 0.84,
+      "text": "The platform closes at nine tonight"
+    }
+  ]
+}

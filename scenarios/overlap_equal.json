@@ -1,0 +1,26 @@
+{
+  "id": "overlap_equal",
+  "title": "Two speakers at the same level",
+  "tags": ["overlap"],
+  "noise_kind": "room",
+  "snr_db": 20,
+  "seed": 8,
+  "utterances": [
+    {
+      "speaker": "A",
+      "accent": "general_american",
+      "start": 1.0,
+      "end": 3.0,
+      "energy": 0.66,
+      "text": "Take the left stair"
+    },
+    {
+      "speaker": "B",
+      "accent": "general_american",
+      "start": 1.4,
+      "end": 3.4,
+      "energy": 0.66,
+      "text": "Take the right stair"
+    }
+  ]
+}
